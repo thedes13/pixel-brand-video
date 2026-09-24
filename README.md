@@ -41,8 +41,8 @@ pixel-brand-video/
 | 只給某個專案 | `<專案>/.claude/skills/pixel-brand-video/` |
 
 ```bash
-git clone https://github.com/<你的帳號>/<repo名稱>.git
-cp -r <repo名稱>/pixel-brand-video ~/.claude/skills/
+git clone https://github.com/thedes13/pixel-brand-video.git
+cp -r pixel-brand-video/pixel-brand-video ~/.claude/skills/
 ```
 
 ## 使用
