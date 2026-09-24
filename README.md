@@ -1,3 +1,6 @@
+- 範例影片
+https://youtu.be/7YiMerqztfY?si=iPVKVhABVhqbXlxK
+
 # pixel-brand-video
 
 **用 Claude Code 做 8-bit 像素風品牌短影片：畫面、配樂、音效、授權紀錄一次完成。**
@@ -60,6 +63,6 @@ cp -r pixel-brand-video/pixel-brand-video ~/.claude/skills/
 
 ## 已知限制
 - 範本是 16:9、30 秒；9:16 或其他長度要調整版面與時間軸（Claude 可以幫你改）。
-- 我沒辦法「聽」成品，混音品質是靠響度、峰值、頻譜與畫面對位檢查；發布前請自己戴耳機聽一遍。
+- Claude 沒辦法「聽」成品，混音品質是靠響度、峰值、頻譜與畫面對位檢查；發布前請自己戴耳機聽一遍。
 
 由益盛科技（[des13.com](https://des13.com)）整理分享。
