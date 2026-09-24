@@ -1,170 +1,97 @@
-- Sample Video  
-https://youtu.be/7YiMerqztfY?si=iPVKVhABVhqbXlxK
-
 # pixel-brand-video
 
-**Create 8-bit pixel-style brand videos with Claude Code — visuals, music, sound effects, mixing, and license documentation in one workflow.**
+**English** | [繁體中文](README.zh-TW.md)
 
-A [Claude Code](https://claude.com/claude-code) skill for creating 8-bit pixel-style brand videos — visuals with HyperFrames, music and SFX mixing with FFmpeg, plus automatic license documentation.
+**Create 8-bit pixel-style brand videos with Claude Code: visuals, music, sound effects, mixing, and a license log in one workflow.**
+
+[![Sample video](https://img.youtube.com/vi/7YiMerqztfY/hqdefault.jpg)](https://youtu.be/7YiMerqztfY)
+
+▶ [Watch the sample video on YouTube](https://youtu.be/7YiMerqztfY)
 
 ![preview](docs/preview.jpg)
 
-## What Is This?
+## What is this?
 
-This is a Claude Code **Skill** — a ready-made workflow that includes instructions, templates, and scripts.
+A [Claude Code](https://claude.com/claude-code) **Skill**: a ready-made workflow made of instructions, a template, and scripts.
 
-Once installed, simply tell Claude your topic, brand, and key messages, and it can:
+Once it is installed, tell Claude your topic, brand, and key messages. It will:
 
-1. Use [HyperFrames](https://hyperframes.heygen.com) (HTML → MP4) to customize a 30-second pixel-style template into your own brand video
-2. Select BGM and sound effects from [Mixkit](https://mixkit.co), sync them to the video, mix the audio, and perform basic mastering
-3. Generate a `LICENSES.md` file to document media licenses and automatically run QA checks for duration, loudness, peak levels, and ending fade-out
+1. Use [HyperFrames](https://hyperframes.heygen.com) (HTML → MP4) to turn the 30-second pixel-style template into your own brand video.
+2. Pick BGM and sound effects from [Mixkit](https://mixkit.co) (free license), sync them to the picture, mix, and master.
+3. Write a `LICENSES.md` file for every asset used, then run automatic QA on duration, loudness, peak level, and the ending fade-out.
 
-## Project Structure
+## What's inside
 
 ```text
 pixel-brand-video/
-├── SKILL.md                          # Complete workflow instructions for Claude
+├── SKILL.md                          # The full workflow for Claude
 ├── assets/
-│   ├── template/index.html           # 30-sec 16:9 template (search EDIT: to change text/colors)
-│   ├── placeholders/                 # Placeholder logo / mascot / pixelated logo
-│   └── audio-pipeline/build_mix.py   # SFX cue sheet + mixing script → generates FFmpeg commands
+│   ├── template/index.html           # 30-second 16:9 template (search "EDIT:" to change text and colors)
+│   ├── placeholders/                 # Placeholder logo, mascot, and pixelated logo steps
+│   └── audio-pipeline/build_mix.py   # SFX cue sheet + mixing script, generates the FFmpeg command
 ├── scripts/
-│   ├── fetch_mixkit.py               # List / download Mixkit music and sound effects
-│   ├── estimate_bpm.py               # Estimate BPM, first beat, and detect drops
-│   └── pixelate_logo.py              # Logo → 3-stage pixel version for the 8-bit ending
-└── references/                       # Licensing notes, mixing notes, and license log templates
-Requirements
-Claude Code
-Node.js 22 or later
-FFmpeg
-Python 3
-
-Install the required Python packages:
-
-pip install pillow numpy
-
-It is also recommended to install the HyperFrames skill:
-
-npx hyperframes skills
-Installation
-
-Copy the pixel-brand-video folder into your Claude Code skills directory, then restart Claude Code.
-
-Scope	Location
-Available to all projects (personal)	~/.claude/skills/pixel-brand-video/
-Windows	C:\Users\<your-user>\.claude\skills\pixel-brand-video\
-Project only	<project>/.claude/skills/pixel-brand-video/
-git clone https://github.com/thedes13/pixel-brand-video.git
-cp -r pixel-brand-video/pixel-brand-video ~/.claude/skills/
-Usage
-
-Just tell Claude what you want to create.
-
-For example:
-
-Use pixel-brand-video to create a 30-second brand video for me.
-The brand is "XX Tech", the logo is located at logo.png, and the topic is "E-commerce Website Redesign".
-Focus on three key points: performance, SEO, and payment integration.
-Add background music and sound effects, and complete the entire video without asking me for confirmation.
-
-If you don't want to use a mascot, simply say:
-
-Don't use a mascot.
-
-If you want to customize the colors, provide 3–5 brand colors.
-
-Licensing
-
-Important:
-
-The code, templates, and placeholder assets in this repository are licensed under the MIT License. See LICENSE.
-
-This repository does not include any music or sound effect files.
-Music and sound effects are downloaded separately from Mixkit using scripts/fetch_mixkit.py and are subject to the Mixkit License.
-
-According to the applicable Mixkit licensing terms, assets may have restrictions depending on their type and intended use. For example, music may have restrictions related to TV, radio, games, or Content ID registration, and sound effects may not be redistributed as standalone files.
-
-See references/licensing.md for additional notes.
-
-Videos created with the template belong to you, including your own visual content and brand assets. However, you are responsible for ensuring that any logos, fonts, images, music, sound effects, and other third-party assets you use are properly licensed.
-The licensing documentation included in this repository is provided for reference only and does not constitute legal advice. Licensing terms may change over time, so always refer to the official Mixkit website for the latest terms.
-Known Limitations
-The default template is designed for 16:9, 30-second videos.
-For 9:16 vertical video or different durations, the layout and timeline will need to be adjusted. Claude can help modify them.
-
-Claude cannot directly "listen" to the final video in the same way a human can. Audio QA therefore relies on measurable data such as loudness, peak levels, frequency spectrum, timing, and synchronization with the visuals.
-
-Always listen to the final video with headphones before publishing.
-
-Created and shared by ES Design / 益盛科技
-des13.com
-
-
-- 範例影片
-https://youtu.be/7YiMerqztfY?si=iPVKVhABVhqbXlxK
-
-# pixel-brand-video
-
-**用 Claude Code 做 8-bit 像素風品牌短影片：畫面、配樂、音效、授權紀錄一次完成。**
-A [Claude Code](https://claude.com/claude-code) skill for making 8-bit pixel-style brand videos — visuals (HyperFrames), music + SFX mixing (FFmpeg) and a license log.
-
-![preview](docs/preview.jpg)
-
-## 這是什麼
-一個 Claude Code **Skill**（一份寫好流程的說明 + 範本 + 腳本）。裝好之後，你只要對 Claude 說主題與重點，它就會：
-
-1. 用 [HyperFrames](https://hyperframes.heygen.com)（HTML → MP4）把 30 秒像素風範本改成你的品牌影片
-2. 從 [Mixkit](https://mixkit.co)（免費授權）挑 BGM 與音效、對拍、混音、母帶
-3. 產生 `LICENSES.md` 素材授權紀錄，並做自動 QA（長度、響度、峰值、結尾淡出）
-
-## 內容
-```
-pixel-brand-video/
-├── SKILL.md                      # 給 Claude 的完整流程
-├── assets/
-│   ├── template/index.html       # 30 秒 16:9 範本（搜尋 EDIT: 改字改色）
-│   ├── placeholders/             # 佔位用 Logo / 吉祥物 / 像素化 Logo
-│   └── audio-pipeline/build_mix.py   # 音效 cue sheet + 混音腳本 → 產生 ffmpeg 指令
-├── scripts/
-│   ├── fetch_mixkit.py           # 列出／下載 Mixkit 音樂與音效
-│   ├── estimate_bpm.py           # 估 BPM、第一拍、找 drop
-│   └── pixelate_logo.py          # Logo → 三段像素版（結尾 8-bit 收尾用）
-└── references/                   # 授權說明、混音筆記、授權紀錄範本
+│   ├── fetch_mixkit.py               # List and download Mixkit music and sound effects
+│   ├── estimate_bpm.py               # Estimate BPM and first beat, find the drop
+│   └── pixelate_logo.py              # Logo → 3-step pixel version for the 8-bit ending
+└── references/                       # Licensing notes, mixing notes, license log template
 ```
 
-## 需求
+## Requirements
+
 - [Claude Code](https://claude.com/claude-code)
-- Node.js 22 以上、[FFmpeg](https://ffmpeg.org)、Python 3（`pip install pillow numpy`）
-- 建議同時安裝 HyperFrames 的 skill（`npx hyperframes skills`）
+- Node.js 22 or later
+- [FFmpeg](https://ffmpeg.org)
+- Python 3, plus two packages:
 
-## 安裝
-把 `pixel-brand-video` 資料夾複製到 Claude Code 的 skills 目錄，重開 Claude Code：
+```bash
+pip install pillow numpy
+```
 
-| 範圍 | 位置 |
+- Recommended: also install the HyperFrames skills:
+
+```bash
+npx hyperframes skills
+```
+
+## Installation
+
+Copy the `pixel-brand-video` folder into your Claude Code skills directory, then restart Claude Code.
+
+| Scope | Location |
 |---|---|
-| 全部專案可用（個人） | `~/.claude/skills/pixel-brand-video/`（Windows：`C:\Users\<你>\.claude\skills\pixel-brand-video\`） |
-| 只給某個專案 | `<專案>/.claude/skills/pixel-brand-video/` |
+| All projects (personal) | `~/.claude/skills/pixel-brand-video/` (Windows: `C:\Users\<you>\.claude\skills\pixel-brand-video\`) |
+| One project only | `<project>/.claude/skills/pixel-brand-video/` |
 
 ```bash
 git clone https://github.com/thedes13/pixel-brand-video.git
 cp -r pixel-brand-video/pixel-brand-video ~/.claude/skills/
 ```
 
-## 使用
-直接對 Claude 說需求，例如：
+## Usage
 
-> 用 pixel-brand-video 幫我做一支 30 秒影片。品牌「XX 科技」，Logo 在 `logo.png`，主題是「電商網站改版」，三個重點：速度、SEO、金流串接。要配樂和音效，直接做完不用問我。
+Tell Claude what you want. For example:
 
-不想提供吉祥物就說「不要吉祥物」；想換色就給它 3～5 個品牌色。
+> Use pixel-brand-video to make a 30-second video. The brand is "XX Tech", the logo is `logo.png`, and the topic is "E-commerce website redesign". Three key points: speed, SEO, and payment integration. Add music and sound effects, and finish everything without asking me.
 
-## 授權（重要）
-- **本 repo 的程式碼、範本與佔位圖：MIT License**（見 [LICENSE](LICENSE)）。
-- **repo 不含任何音樂或音效檔。** 音樂與音效由你自己用 `scripts/fetch_mixkit.py` 從 Mixkit 下載，受 [Mixkit 授權](https://mixkit.co/license/)約束：商業可用、不需署名；BGM 不可用於電視／廣播、遊戲，不可登記 Content ID；音效不可單獨轉散布。細節見 [`references/licensing.md`](pixel-brand-video/references/licensing.md)。
-- 你用範本做出的影片，畫面內容與品牌素材歸你；請自行確認你使用的 Logo、字型、圖片都有合法授權。
-- 授權整理只是使用者備忘，不是法律意見；Mixkit 條款可能更新，請以官網為準。
+- No mascot? Say "no mascot".
+- Want your own colors? Give it 3 to 5 brand colors.
 
-## 已知限制
-- 範本是 16:9、30 秒；9:16 或其他長度要調整版面與時間軸（Claude 可以幫你改）。
-- Claude 沒辦法「聽」成品，混音品質是靠響度、峰值、頻譜與畫面對位檢查；發布前請自己戴耳機聽一遍。
+## Licensing (important)
 
-由益盛科技（[des13.com](https://des13.com)）整理分享。
+- **Code, template, and placeholder images in this repository: [MIT License](LICENSE).**
+- **This repository contains no music or sound-effect files.** You download them yourself from Mixkit with `scripts/fetch_mixkit.py`, and they stay under the [Mixkit license](https://mixkit.co/license/):
+  - Free for commercial use, no attribution required.
+  - BGM cannot be used for TV, radio, or games, and cannot be registered with Content ID.
+  - Sound effects cannot be redistributed on their own.
+  - Details: [`pixel-brand-video/references/licensing.md`](pixel-brand-video/references/licensing.md).
+- The visuals and brand assets in videos you make with the template belong to you. You are responsible for making sure the logos, fonts, images, and any other third-party assets you use are properly licensed.
+- The licensing notes here are a reminder for users and are not legal advice. Mixkit's terms can change, so check the official site.
+
+## Known limitations
+
+- The template is 16:9 and 30 seconds. For 9:16 or another length, the layout and timeline need to be adjusted (Claude can do that for you).
+- Claude cannot listen to the finished video. Audio QA relies on loudness, peak level, spectrum, and alignment with the picture. Listen with headphones before you publish.
+
+---
+
+Made and shared by 益盛科技 / ES Design ([des13.com](https://des13.com)).
