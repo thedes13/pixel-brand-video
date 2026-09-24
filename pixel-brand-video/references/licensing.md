@@ -30,4 +30,4 @@ document.querySelector('dialog,[role=dialog],[class*=modal]').innerText
 不要用。換另一個來源或另一首曲子。也不要用：YouTube 轉 MP3、來源不明音樂、標示 Personal Use Only 的素材、有明顯 Content ID 風險的來源。
 
 ## 其他免費來源（本 skill 沒有自動化，使用前要各自確認授權）
-Pixabay Music／Sound Effects 常被 Cloudflare 擋自動下載；遇到就直接放棄換源，不要嘗試繞過。
+Pixabay Music／Sound Effects 等其他來源，本 skill 沒有測試過。若下載時遇到登入、Captcha、Cloudflare 等阻擋，直接放棄該來源、換別的，不要嘗試繞過。
