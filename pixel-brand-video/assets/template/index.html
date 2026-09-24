@@ -1,0 +1,454 @@
+<!doctype html>
+<!--
+  pixel-brand-video 範本：30 秒 · 16:9 · 8-bit 像素風品牌短片
+  結構：HUD → 場景 A（舊→新）→ 場景 B（核心＋模組）→ 場景 C（成本對比）→ 結尾（Logo＋標語）
+  改法：搜尋 "EDIT:" 註解，改文字、色票、圖檔即可。時間軸在檔案最下方。
+  圖檔：logo.png、mascot.png、logo_px1~3.png（用 scripts/pixelate_logo.py 產生）放在專案根目錄
+-->
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      :root {
+        /* EDIT: 品牌色票（六色即可，改這裡整支影片換色） */
+        --bg: #eef4fb;
+        --ink: #14213d;
+        --blue: #2b6cff;
+        --cyan: #3fc1ee;
+        --orange: #ff7a1a;
+        --red: #e0301e;
+        --gold: #f5b82e;
+        --gray: #5f6b78;
+        --paper: #fbfdff;
+        --zh: "Noto Sans TC", "Microsoft JhengHei", sans-serif;
+        --px: "Press Start 2P", "Silkscreen", monospace;
+      }
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1920px; height: 1080px; overflow: hidden; background: var(--bg); font-family: var(--zh); color: var(--ink); }
+      #root { position: relative; width: 1920px; height: 1080px; overflow: hidden; }
+
+      /* ---------- 背景 ---------- */
+      #bg-grid { position: absolute; inset: 0; z-index: 0;
+        background-image: linear-gradient(rgba(43,108,255,0.10) 2px, transparent 2px), linear-gradient(90deg, rgba(43,108,255,0.10) 2px, transparent 2px);
+        background-size: 40px 40px; }
+      #bg-glow { position: absolute; width: 1600px; height: 1600px; left: 160px; top: -300px; z-index: 0;
+        background: radial-gradient(circle, rgba(63,193,238,0.28) 0%, rgba(63,193,238,0) 60%); }
+      .deco-px { position: absolute; z-index: 0; }
+
+      /* ---------- 場景共用 ---------- */
+      .scene { position: absolute; inset: 0; z-index: 2; overflow: hidden; }
+      .scene + .scene { opacity: 0; }
+      .ghost { position: absolute; left: -30px; bottom: -60px; font-family: var(--px); font-size: 340px; color: rgba(43,108,255,0.10); line-height: 1; }
+      .head { position: absolute; left: 110px; top: 140px; display: flex; flex-direction: column; gap: 18px; }
+      .big-en { font-family: var(--px); font-size: 104px; line-height: 1.1; color: var(--blue); text-shadow: 8px 8px 0 var(--orange); }
+      .big-zh { font-weight: 900; font-size: 116px; line-height: 1.1; color: var(--ink); text-shadow: 8px 8px 0 var(--cyan); }
+      .sub { font-size: 40px; font-weight: 700; color: var(--gray); }
+      .pxbox { background: var(--paper); border: 5px solid var(--ink); box-shadow: 10px 10px 0 var(--blue); }
+
+      /* ---------- HUD ---------- */
+      #hud { position: absolute; left: 0; top: 0; width: 1920px; height: 120px; z-index: 30; display: flex; align-items: center; justify-content: space-between; padding: 0 110px; }
+      #hud-left { display: flex; align-items: center; gap: 22px; }
+      #hud-world { font-family: var(--px); font-size: 20px; color: var(--paper); background: var(--ink); padding: 12px 16px; box-shadow: 5px 5px 0 var(--orange); }
+      #hud-stage { font-family: var(--px); font-size: 20px; color: #1a4fbf; }
+      #hud-names { position: relative; width: 700px; height: 50px; }
+      .hud-name { position: absolute; left: 0; top: 0; font-size: 36px; font-weight: 900; opacity: 0; white-space: nowrap; }
+      .hud-name:first-child { opacity: 1; }
+      .hn { font-family: var(--px); font-size: 20px; color: #1a4fbf; margin-right: 22px; vertical-align: middle; }
+      #hud-bar { display: flex; gap: 10px; }
+      .hud-sq { width: 34px; height: 34px; border: 4px solid var(--ink); background: var(--paper); }
+      .hud-fill { width: 100%; height: 100%; background: var(--orange); transform: scale(0); }
+
+      /* ---------- 吉祥物（EDIT: 換成 mascot.png；尺寸依圖片比例調整） ---------- */
+      #mascot-pos { position: absolute; left: 1470px; top: 560px; width: 323px; height: 440px; z-index: 25; }
+      #mascot-bob, #mascot-tap { position: absolute; inset: 0; }
+      #mascot-tap { transform-origin: 50% 100%; }
+      #mascot-img { width: 323px; height: 440px; display: block; image-rendering: pixelated; }
+      #mascot-shadow { position: absolute; left: 60px; bottom: -14px; width: 200px; height: 22px; background: rgba(20,33,61,0.18); z-index: -1; }
+      #spark { position: absolute; left: 43px; top: 187px; width: 0; height: 0; }
+      .sp { position: absolute; width: 16px; height: 16px; left: -8px; top: -8px; background: var(--gold); opacity: 0; }
+
+      /* ---------- 像素方塊轉場 ---------- */
+      #cover { position: absolute; inset: 0; z-index: 20; pointer-events: none; }
+      .cell { position: absolute; width: 162px; height: 162px; transform: scale(0); }
+
+      /* ---------- 迷你網站（em 為單位，可縮放） ---------- */
+      .ms { width: 100%; height: 100%; background: var(--paper); overflow: hidden; display: flex; flex-direction: column; }
+      .ms-nav { display: flex; align-items: center; gap: 0.6em; padding: 0.6em 0.9em; background: var(--ink); }
+      .ms-logo { width: 1.1em; height: 1.1em; background: var(--orange); }
+      .ms-brand { color: var(--paper); font-weight: 900; font-size: 0.8em; letter-spacing: 0.08em; }
+      .ms-links { margin-left: auto; display: flex; gap: 0.5em; }
+      .ms-links i { display: block; width: 2em; height: 0.35em; background: rgba(251,253,255,0.55); }
+      .ms-hero { display: flex; gap: 0.8em; padding: 1em 0.9em; align-items: center; background: #dcecfa; }
+      .ms-hero-txt { flex: 1; display: flex; flex-direction: column; gap: 0.45em; }
+      .ms-h1 { font-weight: 900; font-size: 1.25em; line-height: 1.2; }
+      .ms-p { width: 80%; height: 0.4em; background: #9fb6cc; }
+      .ms-cta { width: 5em; height: 1.4em; background: var(--orange); box-shadow: 0.15em 0.15em 0 var(--ink); }
+      .ms-art { width: 7em; height: 5em; background: linear-gradient(135deg, var(--blue) 0 50%, var(--cyan) 50% 100%); position: relative; }
+      .ms-art::after { content: ""; position: absolute; left: 1.5em; top: 1.2em; width: 2em; height: 2em; background: var(--gold); }
+      .ms-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.6em; padding: 0.8em 0.9em; }
+      .ms-card { background: #fff; border: 0.12em solid #c7d6e6; padding: 0.5em; display: flex; flex-direction: column; gap: 0.3em; }
+      .ms-card b { display: block; width: 1.4em; height: 1.4em; background: var(--cyan); }
+      .ms-card i { display: block; height: 0.35em; background: #b9c9d9; }
+
+      /* ================= 場景 A：舊 → 新 ================= */
+      #a-win { position: absolute; left: 110px; top: 190px; width: 1280px; height: 760px; }
+      .win-bar { height: 56px; background: #c0c0c0; border-bottom: 4px solid var(--ink); display: flex; align-items: center; gap: 14px; padding: 0 18px; }
+      .win-dot { width: 18px; height: 18px; border: 3px solid var(--ink); background: #e8e8e8; }
+      .win-url { flex: 1; height: 34px; background: #fff; border: 3px solid #808080; font-family: "Courier New", monospace; font-size: 22px; display: flex; align-items: center; padding-left: 12px; position: relative; }
+      .win-url span { position: absolute; left: 12px; }
+      .win-body { position: absolute; left: 0; right: 0; top: 56px; bottom: 0; overflow: hidden; }
+      #a-old { position: absolute; inset: 0; background: #d8d0b8; padding: 30px 40px; font-family: "Times New Roman", serif; }
+      .old-title { font-size: 60px; color: #c00000; font-weight: 700; text-align: center; text-decoration: underline; }
+      .old-marquee { margin-top: 18px; background: #000080; color: #ffff00; font-size: 30px; padding: 6px 0; white-space: nowrap; overflow: hidden; }
+      .old-marquee span { display: inline-block; }
+      .old-row { display: flex; gap: 30px; margin-top: 26px; }
+      .old-links { width: 300px; border: 3px ridge #999; background: #eee; padding: 14px; display: flex; flex-direction: column; gap: 10px; font-size: 28px; color: #0000ee; text-decoration: underline; }
+      .old-main { flex: 1; display: flex; flex-direction: column; gap: 18px; }
+      .old-imgs { display: flex; gap: 18px; }
+      .old-img { width: 190px; height: 140px; border: 3px inset #999; background: #fff; display: flex; align-items: center; justify-content: center; font-size: 22px; color: #999; }
+      .old-uc { font-family: var(--px); font-size: 22px; color: #000; padding: 18px; text-align: center; background: repeating-linear-gradient(45deg, #ffd400 0 24px, #111 24px 48px); }
+      .old-uc span { background: #ffd400; padding: 6px 10px; }
+      #a-new { position: absolute; inset: 0; font-size: 34px; clip-path: inset(0 100% 0 0); }
+      #a-scan { position: absolute; top: 0; bottom: 0; left: 0; width: 18px; background: var(--orange); opacity: 0; }
+      .warn { position: absolute; font-size: 34px; font-weight: 900; color: #fff; background: var(--red); padding: 10px 20px; border: 4px solid var(--ink); box-shadow: 6px 6px 0 var(--ink); white-space: nowrap; }
+      #a-label { position: absolute; left: 150px; top: 150px; font-weight: 900; font-size: 40px; color: var(--paper); background: var(--blue); padding: 10px 22px; border: 4px solid var(--ink); box-shadow: 6px 6px 0 var(--orange); }
+
+      /* ================= 場景 B：核心 + 模組 ================= */
+      #b-lines { position: absolute; inset: 0; width: 1920px; height: 1080px; }
+      #b-core { position: absolute; left: 665px; top: 540px; width: 220px; height: 220px; background: var(--ink); border: 6px solid var(--cyan); box-shadow: 10px 10px 0 var(--orange); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; }
+      #b-core .t { font-family: var(--px); font-size: 52px; color: var(--cyan); }
+      #b-core .s { font-family: var(--px); font-size: 16px; color: var(--paper); }
+      .pin { position: absolute; width: 22px; height: 14px; background: var(--gold); }
+      #b-glow { position: absolute; left: 475px; top: 350px; width: 600px; height: 600px; background: radial-gradient(circle, rgba(63,193,238,0.45), rgba(63,193,238,0) 65%); }
+      .mod { position: absolute; width: 300px; height: 96px; display: flex; align-items: center; gap: 16px; padding: 0 18px; font-size: 34px; font-weight: 900; }
+      .mod b { width: 44px; height: 44px; background: var(--cyan); border: 4px solid var(--ink); flex: none; }
+      .mod.plus { border-style: dashed; box-shadow: none; background: rgba(251,253,255,0.6); color: var(--blue); }
+      .mod.plus b { background: var(--orange); }
+
+      /* ================= 場景 C：成本對比 ================= */
+      #c-stack { position: absolute; left: 110px; top: 360px; width: 580px; padding: 26px 30px; display: flex; flex-direction: column; gap: 14px; }
+      #c-stack .lbl { font-size: 32px; font-weight: 900; color: var(--gray); }
+      .fee { font-size: 38px; font-weight: 900; padding: 10px 18px; background: #fde6d8; border: 4px solid var(--red); display: flex; justify-content: space-between; }
+      .fee span { color: var(--red); font-family: var(--px); font-size: 26px; align-self: center; }
+      #c-total { margin-top: 8px; font-size: 32px; font-weight: 900; display: flex; justify-content: space-between; align-items: baseline; }
+      #c-num { font-family: var(--px); font-size: 36px; color: var(--red); font-variant-numeric: tabular-nums; }
+      #c-strike { position: absolute; left: 90px; top: 620px; width: 620px; height: 14px; background: var(--ink); transform: rotate(-12deg) scaleX(0); transform-origin: left center; }
+      #c-chart { position: absolute; left: 760px; top: 360px; width: 640px; height: 400px; }
+      #c-btn { position: absolute; left: 950px; top: 800px; width: 440px; height: 120px; background: var(--orange); border: 6px solid var(--ink); box-shadow: 0 12px 0 var(--ink); display: flex; align-items: center; justify-content: center; font-size: 38px; font-weight: 900; color: var(--paper); }
+      #c-btn-on { position: absolute; inset: 0; background: var(--blue); display: flex; align-items: center; justify-content: center; opacity: 0; }
+
+      /* ================= 結尾 ================= */
+      #end-logo { position: absolute; left: 150px; top: 250px; width: 1060px; height: 248px; }
+      #end-logo img { position: absolute; inset: 0; width: 1060px; height: 248px; }
+      #end-logo img + img { opacity: 0; image-rendering: pixelated; }
+      #end-rule { position: absolute; left: 160px; top: 530px; width: 1040px; height: 8px; background: var(--ink); transform-origin: left center; }
+      #end-text { position: absolute; left: 160px; top: 560px; display: flex; flex-direction: column; gap: 26px; }
+      #end-svc { font-size: 54px; font-weight: 900; letter-spacing: 0.06em; }
+      #end-tags { display: flex; gap: 14px; align-items: center; }
+      .etag { font-family: var(--px); font-size: 28px; padding: 14px 18px; background: var(--ink); color: var(--paper); }
+      .etag.zh { font-family: var(--zh); font-weight: 900; font-size: 34px; padding: 8px 18px; background: var(--orange); }
+      .ex { font-family: var(--px); font-size: 26px; color: var(--orange); }
+      #end-line { font-size: 64px; font-weight: 900; color: var(--blue); text-shadow: 6px 6px 0 var(--gold); }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="30" data-width="1920" data-height="1080">
+      <div id="bg-grid"></div>
+      <div id="bg-glow"></div>
+      <div id="deco" data-layout-ignore></div>
+
+      <!-- ============ 場景 A（0–7s）：舊 → 新 ============ -->
+      <div id="sA" class="scene">
+        <div class="ghost" data-layout-ignore>01</div>
+        <div id="a-win" class="pxbox">
+          <div class="win-bar">
+            <div class="win-dot"></div><div class="win-dot"></div><div class="win-dot"></div>
+            <div class="win-url"><span id="url-old">http://www.old-site.example/index.htm</span><span id="url-new" style="opacity:0">https://www.your-brand.example</span></div>
+          </div>
+          <div class="win-body">
+            <div id="a-old">
+              <div class="old-title">歡迎光臨本公司網站</div>
+              <div class="old-marquee"><span id="a-mq">★ 最新消息：本網站建置中，敬請期待 ★ 建議使用 IE 6.0 瀏覽 ★</span></div>
+              <div class="old-row">
+                <div class="old-links"><span>公司簡介</span><span>產品介紹</span><span>最新消息</span><span>聯絡我們</span></div>
+                <div class="old-main">
+                  <div class="old-imgs"><div class="old-img">[圖片]</div><div class="old-img">[圖片]</div><div class="old-img">[圖片]</div></div>
+                  <div class="old-uc"><span>UNDER CONSTRUCTION</span></div>
+                </div>
+              </div>
+            </div>
+            <div id="a-new" class="ms-host"></div>
+            <div id="a-scan"></div>
+          </div>
+        </div>
+        <!-- EDIT: 三個痛點貼紙 -->
+        <div class="warn" id="w1" style="left: 1010px; top: 440px">痛點一</div>
+        <div class="warn" id="w2" style="left: 150px; top: 820px">痛點二</div>
+        <div class="warn" id="w3" style="left: 900px; top: 860px">痛點三</div>
+        <!-- EDIT: 改版後標籤 -->
+        <div id="a-label">重新設計・煥然一新</div>
+      </div>
+
+      <!-- ============ 場景 B（7–14.5s）：核心 + 六個模組 ============ -->
+      <div id="sB" class="scene">
+        <div class="ghost" data-layout-ignore>02</div>
+        <div class="head" style="top: 140px">
+          <div class="big-en" id="b-big">YOUR CORE</div> <!-- EDIT: 大字（英文像素字，建議 ≤ 10 字元） -->
+          <div class="sub" id="b-sub">一個核心接上所有功能，可以持續擴充</div> <!-- EDIT -->
+        </div>
+        <div id="b-glow"></div>
+        <svg id="b-lines" viewBox="0 0 1920 1080">
+          <g fill="none" stroke="#14213d" stroke-width="8">
+            <polyline class="bl" points="440,478 560,478 560,650 665,650" />
+            <polyline class="bl" points="440,668 665,668" />
+            <polyline class="bl" points="440,858 560,858 560,686 665,686" />
+            <polyline class="bl" points="1110,478 990,478 990,650 885,650" />
+            <polyline class="bl" points="1110,668 885,668" />
+            <polyline class="bl" points="1110,858 990,858 990,686 885,686" />
+          </g>
+          <g fill="none" stroke="#3fc1ee" stroke-width="8" stroke-dasharray="16 24">
+            <polyline class="bf" points="440,478 560,478 560,650 665,650" />
+            <polyline class="bf" points="440,668 665,668" />
+            <polyline class="bf" points="440,858 560,858 560,686 665,686" />
+            <polyline class="bf" points="1110,478 990,478 990,650 885,650" />
+            <polyline class="bf" points="1110,668 885,668" />
+          </g>
+        </svg>
+        <div id="b-core">
+          <div class="t">CORE</div><div class="s">PLATFORM</div>
+          <div class="pin" style="left: 30px; top: -20px"></div><div class="pin" style="left: 99px; top: -20px"></div><div class="pin" style="left: 168px; top: -20px"></div>
+          <div class="pin" style="left: 30px; bottom: -20px"></div><div class="pin" style="left: 99px; bottom: -20px"></div><div class="pin" style="left: 168px; bottom: -20px"></div>
+        </div>
+        <!-- EDIT: 六個模組名稱（第六個是虛線「擴充」） -->
+        <div class="mod pxbox" style="left: 140px; top: 430px"><b></b>模組一</div>
+        <div class="mod pxbox" style="left: 140px; top: 620px"><b></b>模組二</div>
+        <div class="mod pxbox" style="left: 140px; top: 810px"><b></b>模組三</div>
+        <div class="mod pxbox" style="left: 1110px; top: 430px"><b></b>模組四</div>
+        <div class="mod pxbox" style="left: 1110px; top: 620px"><b></b>模組五</div>
+        <div class="mod pxbox plus" style="left: 1110px; top: 810px"><b></b>＋ 擴充模組</div>
+      </div>
+
+      <!-- ============ 場景 C（14.5–22.5s）：成本對比 ============ -->
+      <div id="sC" class="scene">
+        <div class="ghost" data-layout-ignore>03</div>
+        <div class="head" style="top: 140px">
+          <div class="big-zh" id="c-big">降低長期成本</div> <!-- EDIT -->
+        </div>
+        <div id="c-stack" class="pxbox">
+          <div class="lbl">傳統模式</div> <!-- EDIT: 四項費用 -->
+          <div class="fee">月租費<span>$$</span></div>
+          <div class="fee">＋ 成交抽成<span>%</span></div>
+          <div class="fee">＋ 功能加購<span>$$</span></div>
+          <div class="fee">＋ 外掛費用<span>$$</span></div>
+          <div id="c-total">累計支出 <span id="c-num">0</span></div>
+        </div>
+        <div id="c-strike"></div>
+        <svg id="c-chart" viewBox="0 0 640 400">
+          <rect x="0" y="0" width="640" height="400" fill="#fbfdff" stroke="#14213d" stroke-width="5" />
+          <path d="M60 340 H600 M60 340 V40" stroke="#14213d" stroke-width="5" fill="none" />
+          <text x="585" y="376" font-size="24" font-weight="900" fill="#5f6b78" text-anchor="end" font-family="Noto Sans TC, Microsoft JhengHei">時間 →</text>
+          <text x="78" y="70" font-size="24" font-weight="900" fill="#5f6b78" font-family="Noto Sans TC, Microsoft JhengHei">長期成本</text>
+          <path id="line-a" d="M70 300 H150 V270 H230 V230 H310 V185 H390 V140 H470 V95 H560 V60" stroke="#e0301e" stroke-width="10" fill="none" />
+          <path id="line-b" d="M70 230 H150 V240 H230 V255 H310 V270 H390 V282 H470 V292 H560 V300" stroke="#2b6cff" stroke-width="12" fill="none" />
+          <text id="lbl-a" x="440" y="60" font-size="26" font-weight="900" fill="#e0301e" text-anchor="end" font-family="Noto Sans TC, Microsoft JhengHei">傳統模式</text>
+          <text id="lbl-b" x="570" y="270" font-size="26" font-weight="900" fill="#2b6cff" text-anchor="end" font-family="Noto Sans TC, Microsoft JhengHei">你的新方案</text>
+        </svg>
+        <div id="c-btn">切換新方案 ▶<div id="c-btn-on">新方案 ON</div></div>
+      </div>
+
+      <!-- ============ 結尾（22.5–30s） ============ -->
+      <div id="sD" class="scene">
+        <div id="end-logo">
+          <img id="lg0" src="logo.png" alt="logo" />
+          <img id="lg1" src="logo_px1.png" alt="" />
+          <img id="lg2" src="logo_px2.png" alt="" />
+          <img id="lg3" src="logo_px3.png" alt="" />
+        </div>
+        <div id="end-rule"></div>
+        <div id="end-text">
+          <div id="end-svc">你的服務 · 你的業務</div> <!-- EDIT -->
+          <div id="end-tags"> <!-- EDIT: 關鍵字標籤 -->
+            <div class="etag">TAG1</div><div class="ex">×</div><div class="etag">TAG2</div><div class="ex">×</div><div class="etag">TAG3</div><div class="ex">×</div><div class="etag zh">你的特色</div>
+          </div>
+          <div id="end-line">一句話收尾的標語。</div> <!-- EDIT -->
+        </div>
+      </div>
+
+      <div id="cover" data-layout-ignore></div>
+
+      <div id="mascot-pos">
+        <div id="mascot-shadow"></div>
+        <div id="mascot-bob"><div id="mascot-tap">
+          <img id="mascot-img" src="mascot.png" alt="mascot" />
+          <div id="spark"></div>
+        </div></div>
+      </div>
+
+      <div id="hud">
+        <div id="hud-left">
+          <div id="hud-world">YOUR WORLD</div> <!-- EDIT -->
+          <div id="hud-stage">STAGE</div>
+          <div id="hud-names"> <!-- EDIT: 4 個關卡名稱（數量要與時間軸 stage() 一致） -->
+            <div class="hud-name"><span class="hn">01/04</span>舊的做法</div>
+            <div class="hud-name"><span class="hn">02/04</span>核心串接</div>
+            <div class="hud-name"><span class="hn">03/04</span>降低成本</div>
+            <div class="hud-name"><span class="hn">04/04</span>正式上線</div>
+          </div>
+        </div>
+        <div id="hud-bar"></div>
+      </div>
+    </div>
+
+    <script>
+      (function () {
+        function mulberry32(a) { return function () { a |= 0; a = (a + 0x6d2b79f5) | 0; var t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+        var rnd = mulberry32(1313);
+        var PAL = ["#2b6cff", "#3fc1ee", "#ff7a1a", "#14213d", "#f5b82e"];
+
+        // ---------- 建立 DOM（同步） ----------
+        var MS = '<div class="ms-nav"><div class="ms-logo"></div><div class="ms-brand">BRAND</div><div class="ms-links"><i></i><i></i><i></i></div></div>' +
+          '<div class="ms-hero"><div class="ms-hero-txt"><div class="ms-h1">你的品牌，全新登場</div><div class="ms-p"></div><div class="ms-cta"></div></div><div class="ms-art"></div></div>' +
+          '<div class="ms-cards">' + '<div class="ms-card"><b></b><i></i><i></i></div>'.repeat(3) + "</div>";
+        document.querySelectorAll(".ms-host").forEach(function (h) { h.classList.add("ms"); h.innerHTML = MS; });
+
+        var deco = document.getElementById("deco");
+        for (var i = 0; i < 16; i++) {
+          var d = document.createElement("div"); d.className = "deco-px";
+          var s = [24, 32, 40, 56][Math.floor(rnd() * 4)];
+          d.style.cssText = "width:" + s + "px;height:" + s + "px;left:" + Math.floor(rnd() * 46) * 40 + "px;top:" + (160 + Math.floor(rnd() * 22) * 40) + "px;background:" + PAL[i % 5] + ";opacity:0.22";
+          deco.appendChild(d);
+        }
+        var STAGES = 4;
+        var hudBar = document.getElementById("hud-bar");
+        for (var i = 0; i < STAGES; i++) { var q = document.createElement("div"); q.className = "hud-sq"; q.innerHTML = '<div class="hud-fill"></div>'; hudBar.appendChild(q); }
+        var spark = document.getElementById("spark");
+        for (var i = 0; i < 8; i++) { var p = document.createElement("div"); p.className = "sp"; p.style.background = PAL[i % 5]; spark.appendChild(p); }
+        var cover = document.getElementById("cover"), cells = [];
+        for (var r = 0; r < 7; r++) for (var c = 0; c < 12; c++) {
+          var cl = document.createElement("div"); cl.className = "cell";
+          cl.style.left = c * 160 + "px"; cl.style.top = r * 160 - 20 + "px"; cl.style.background = PAL[(r * 3 + c) % 5];
+          cover.appendChild(cl); cells.push({ el: cl, x: c * 160 + 80, y: r * 160 + 60 });
+        }
+
+        // ---------- 時間軸 ----------
+        window.__timelines = window.__timelines || {};
+        var tl = gsap.timeline({ paused: true });
+
+        // 常駐動態：裝飾漂浮、光暈呼吸、吉祥物 idle
+        gsap.utils.toArray(".deco-px").forEach(function (d, i) { tl.to(d, { y: i % 2 ? -40 : 40, rotation: i % 3 ? 0 : 90, duration: 5, ease: "sine.inOut", yoyo: true, repeat: 5 }, (i % 4) * 0.2); });
+        tl.to("#bg-glow", { scale: 1.12, x: -120, duration: 7.5, ease: "sine.inOut", yoyo: true, repeat: 3 }, 0);
+        tl.to("#mascot-bob", { y: -12, duration: 0.4, ease: "steps(2)", yoyo: true, repeat: 73 }, 0.1);
+
+        // 工具：觸控筆點擊 / 跳躍 / 像素轉場 / HUD 關卡
+        function tap(t) {
+          tl.to("#mascot-tap", { rotation: -7, duration: 0.12, ease: "power2.out" }, t);
+          tl.to("#mascot-tap", { rotation: 0, duration: 0.25, ease: "back.out(3)" }, t + 0.12);
+          gsap.utils.toArray("#spark .sp").forEach(function (p, i) {
+            var a = (i / 8) * Math.PI * 2;
+            tl.fromTo(p, { x: 0, y: 0, opacity: 1, scale: 1 }, { x: Math.cos(a) * 70, y: Math.sin(a) * 70, opacity: 0, scale: 0.4, duration: 0.45, ease: "power3.out", immediateRender: false }, t + 0.1);
+          });
+        }
+        function hop(t) {
+          tl.to("#mascot-pos", { y: -70, duration: 0.22, ease: "power2.out" }, t - 0.28);
+          tl.to("#mascot-pos", { y: 0, duration: 0.26, ease: "bounce.out" }, t - 0.06);
+        }
+        function cover2(T, from, to, ox, oy) {
+          cells.forEach(function (c) {
+            var d = Math.hypot(c.x - ox, c.y - oy) / 2300;
+            tl.to(c.el, { scale: 1, duration: 0.12, ease: "power2.out" }, T - 0.32 + d * 0.2);
+            tl.to(c.el, { scale: 0, duration: 0.12, ease: "power2.in" }, T + 0.04 + d * 0.2);
+          });
+          tl.set(from, { opacity: 0 }, T); tl.set(to, { opacity: 1 }, T);
+        }
+        var names = gsap.utils.toArray(".hud-name"), fills = gsap.utils.toArray(".hud-fill");
+        function stage(n, t) {
+          if (n > 1) {
+            tl.set(names[n - 2], { opacity: 0 }, t);
+            tl.fromTo(names[n - 1], { opacity: 0, x: -24 }, { opacity: 1, x: 0, duration: 0.25, ease: "power3.out", immediateRender: false }, t);
+          }
+          tl.fromTo(fills[n - 1], { scale: 0 }, { scale: 1, duration: 0.3, ease: "back.out(3)", immediateRender: false }, t + 0.05);
+        }
+
+        tl.fromTo("#hud", { y: -120 }, { y: 0, duration: 0.5, ease: "expo.out" }, 0.1);
+        tl.fromTo("#mascot-pos", { x: 520, opacity: 0 }, { x: 0, opacity: 1, duration: 0.6, ease: "back.out(1.4)" }, 0.2);
+        stage(1, 0.1);
+
+        // ===== 場景 A（0–7）=====
+        tl.fromTo("#a-win", { y: 60, opacity: 0, rotation: -1.5 }, { y: 0, opacity: 1, rotation: 0, duration: 0.45, ease: "power3.out" }, 0.15);
+        tl.fromTo("#a-mq", { x: 600 }, { x: -1200, duration: 5, ease: "none" }, 0.2);
+        tl.fromTo("#w1", { scale: 0, rotation: 8 }, { scale: 1, rotation: 4, duration: 0.3, ease: "back.out(3)" }, 1.0);
+        tl.fromTo("#w2", { scale: 0, rotation: -8 }, { scale: 1, rotation: -3, duration: 0.3, ease: "elastic.out(1, 0.5)" }, 1.5);
+        tl.fromTo("#w3", { scale: 0 }, { scale: 1, duration: 0.25, ease: "steps(3)" }, 2.0);
+        tap(3.0);
+        tl.to(["#w1", "#w2", "#w3"], { scale: 0, duration: 0.2, ease: "power2.in", stagger: 0.05 }, 3.15);
+        tl.set("#a-scan", { opacity: 1 }, 3.15);
+        tl.fromTo("#a-scan", { x: 0 }, { x: 1262, duration: 0.6, ease: "steps(10)", immediateRender: false }, 3.15);
+        tl.to("#a-new", { clipPath: "inset(0 0% 0 0)", duration: 0.6, ease: "steps(10)" }, 3.15);
+        tl.set("#a-scan", { opacity: 0 }, 3.76);
+        tl.set("#url-old", { opacity: 0 }, 3.4); tl.set("#url-new", { opacity: 1 }, 3.4);
+        tl.fromTo("#a-label", { scale: 0.4, opacity: 0, x: -40 }, { scale: 1, opacity: 1, x: 0, duration: 0.35, ease: "back.out(2.5)" }, 3.9);
+        tl.to("#a-win", { boxShadow: "14px 14px 0 #ff7a1a", duration: 0.3, ease: "sine.out" }, 4.0);
+
+        // ===== 場景 B（7–14.5）=====
+        cover2(7.0, "#sA", "#sB", 1500, 700); hop(7.0); stage(2, 7.0);
+        tl.fromTo("#b-big", { scale: 1.5, opacity: 0, transformOrigin: "0% 50%" }, { scale: 1, opacity: 1, duration: 0.4, ease: "expo.out" }, 7.1);
+        tl.fromTo("#b-sub", { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: 0.4, ease: "power2.out" }, 7.3);
+        tl.fromTo("#b-core", { scale: 0, rotation: -90 }, { scale: 1, rotation: 0, duration: 0.55, ease: "back.out(1.8)" }, 7.2);
+        tl.fromTo("#b-glow", { scale: 0.3, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.8, ease: "sine.out" }, 7.3);
+        tl.to("#b-glow", { scale: 1.15, duration: 0.6, ease: "sine.inOut", yoyo: true, repeat: 5 }, 8.1);
+        tap(7.9);
+        var mods = gsap.utils.toArray("#sB .mod");
+        [0, 3, 1, 4, 2, 5].forEach(function (idx, k) {
+          tl.fromTo(mods[idx], { x: idx < 3 ? -60 : 60, opacity: 0, scale: 0.85 }, { x: 0, opacity: 1, scale: 1, duration: 0.3, ease: k % 2 ? "power3.out" : "back.out(2)" }, 8.2 + k * 0.28);
+        });
+        gsap.utils.toArray("#sB .bl").forEach(function (l, k) {
+          var len = l.getTotalLength();
+          tl.fromTo(l, { strokeDasharray: len, strokeDashoffset: len }, { strokeDashoffset: 0, duration: 0.3, ease: "power1.inOut" }, 8.3 + k * 0.28);
+        });
+        tl.fromTo("#sB .bf", { strokeDashoffset: 0, opacity: 0 }, { strokeDashoffset: -240, opacity: 1, duration: 4.5, ease: "none" }, 10.2);
+
+        // ===== 場景 C（14.5–22.5）=====
+        cover2(14.5, "#sB", "#sC", 960, 540); hop(14.5); stage(3, 14.5);
+        tl.fromTo("#c-big", { y: 60, opacity: 0 }, { y: 0, opacity: 1, duration: 0.4, ease: "power4.out" }, 14.6);
+        tl.fromTo("#c-stack", { x: -80, opacity: 0 }, { x: 0, opacity: 1, duration: 0.35, ease: "expo.out" }, 14.65);
+        tl.fromTo("#sC .fee", { x: -40, opacity: 0, scale: 0.9 }, { x: 0, opacity: 1, scale: 1, duration: 0.2, ease: "back.out(2.5)", stagger: 0.25 }, 14.9);
+        tl.fromTo("#c-total", { opacity: 0 }, { opacity: 1, duration: 0.2, ease: "none" }, 15.0);
+        var costEl = document.getElementById("c-num"), cost = { v: 0 };
+        tl.fromTo(cost, { v: 0 }, { v: 999999, duration: 2.2, ease: "power2.in", onUpdate: function () { costEl.textContent = Math.round(cost.v).toLocaleString("en-US") + (cost.v > 999990 ? "+" : ""); } }, 15.1);
+        tl.fromTo("#c-btn", { y: 160, opacity: 0 }, { y: 0, opacity: 1, duration: 0.35, ease: "back.out(1.8)" }, 16.5);
+        tap(18.0);
+        tl.to("#c-btn", { y: 12, boxShadow: "0 0px 0 #14213d", duration: 0.08, ease: "power2.in" }, 18.1);
+        tl.to("#c-btn", { y: 0, boxShadow: "0 12px 0 #14213d", duration: 0.2, ease: "back.out(3)" }, 18.25);
+        tl.to("#c-btn-on", { opacity: 1, duration: 0.2, ease: "steps(2)" }, 18.2);
+        tl.to("#c-stack", { opacity: 0.4, duration: 0.3, ease: "sine.out" }, 18.3);
+        tl.fromTo("#c-strike", { scaleX: 0, rotation: -12 }, { scaleX: 1, rotation: -12, duration: 0.3, ease: "power3.out", immediateRender: false }, 18.3);
+        tl.fromTo("#c-chart", { scale: 0.6, opacity: 0, transformOrigin: "50% 100%" }, { scale: 1, opacity: 1, duration: 0.4, ease: "power3.out" }, 18.5);
+        ["#line-a", "#line-b"].forEach(function (id, k) {
+          var p = document.querySelector(id), len = p.getTotalLength();
+          tl.fromTo(id, { strokeDasharray: len, strokeDashoffset: len }, { strokeDashoffset: 0, duration: 1.2, ease: k ? "power2.out" : "none" }, 18.9 + k * 0.4);
+        });
+        tl.fromTo("#lbl-a", { opacity: 0 }, { opacity: 1, duration: 0.2, ease: "none" }, 20.0);
+        tl.fromTo("#lbl-b", { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.3, ease: "back.out(2)" }, 20.6);
+
+        // ===== 結尾（22.5–30）=====
+        cover2(22.5, "#sC", "#sD", 1600, 700); hop(22.5); stage(4, 22.5);
+        tl.to("#hud", { y: -140, duration: 0.3, ease: "power2.in" }, 22.9);
+        tl.fromTo("#end-logo", { y: 40, opacity: 0, scale: 0.9 }, { y: 0, opacity: 1, scale: 1, duration: 0.5, ease: "expo.out" }, 22.8);
+        tl.fromTo("#end-rule", { scaleX: 0 }, { scaleX: 1, duration: 0.4, ease: "power3.inOut" }, 23.2);
+        tl.fromTo("#end-svc", { x: -40, opacity: 0 }, { x: 0, opacity: 1, duration: 0.4, ease: "power3.out" }, 23.4);
+        tl.fromTo("#end-tags > *", { y: 30, opacity: 0 }, { y: 0, opacity: 1, duration: 0.25, ease: "back.out(2.5)", stagger: 0.08 }, 23.9);
+        tl.fromTo("#end-line", { opacity: 0, x: 60 }, { opacity: 1, x: 0, duration: 0.6, ease: "power2.out" }, 24.8);
+        tap(26.5);
+        // Logo 三段像素化（8-bit 收尾）
+        tl.set("#lg1", { opacity: 1 }, 27.0); tl.set("#lg0", { opacity: 0 }, 27.0);
+        tl.set("#lg2", { opacity: 1 }, 27.2); tl.set("#lg1", { opacity: 0 }, 27.2);
+        tl.set("#lg3", { opacity: 1 }, 27.4); tl.set("#lg2", { opacity: 0 }, 27.4);
+        tl.fromTo("#end-logo", { scale: 1 }, { scale: 1.04, duration: 0.15, ease: "power2.out", yoyo: true, repeat: 1, immediateRender: false }, 27.4);
+
+        window.__timelines["main"] = tl;
+      })();
+    </script>
+  </body>
+</html>

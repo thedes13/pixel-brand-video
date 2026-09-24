@@ -1,0 +1,12 @@
+# 音樂／音效原檔：授權不允許單獨散布，請勿放進公開 repo
+audio/raw/
+audio/sfx/
+*.mp3
+*.wav
+# 渲染輸出與暫存
+renders/
+snaps/
+node_modules/
+premaster.wav
+mix_audio.wav
+output_esdesign_sound.mp4
